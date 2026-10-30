@@ -1,0 +1,27 @@
+{
+  "name": "dashboard",
+  "version": "1.0.0",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js",
+    "broker": "node tools/broker.js",
+    "mock": "node tools/mock-publisher.js",
+    "mock:fall": "node tools/mock-publisher.js --fall",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "Patient dashboard for the Traxion fall detection smart watch",
+  "dependencies": {
+    "body-parser": "^1.20.3",
+    "express": "^4.21.1",
+    "mqtt": "^5.10.1",
+    "nodemailer": "^6.9.15",
+    "ws": "^8.18.0"
+  },
+  "devDependencies": {
+    "aedes": "^0.51.3"
+  }
+}
