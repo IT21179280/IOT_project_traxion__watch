@@ -1,4 +1,5 @@
 // server.js
+require('dotenv').config({ quiet: true });
 const express = require('express');
 const app = express();
 const mqtt = require('mqtt');
