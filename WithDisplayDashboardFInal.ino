@@ -8,15 +8,19 @@
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
 
+// Credentials live in secrets.h, which is git-ignored.
+// Copy secrets.example.h to secrets.h and fill in your own values.
+#include "secrets.h"
+
 // Wi-Fi network credentials
-const char* ssid = "dialog router";
-const char* password = "111#BuduAmmo#000";
+const char* ssid = WIFI_SSID;
+const char* password = WIFI_PASSWORD;
 
 // ThingsBoard server settings
 const char* mqtt_server = "thingsboard.cloud";
 const int mqtt_port = 1883;
-const char* mqtt_token = "7kax5hbtu8ilukfeqdg2";
-const char* device_id = "b97d30e0-7c1d-11ef-ad7c-57826b712250";
+const char* mqtt_token = TB_TOKEN;
+const char* device_id = TB_DEVICE_ID;
 
 Adafruit_MPU6050 mpu;
 

@@ -37,6 +37,7 @@ plus an email — when a fall is detected.
 ```
 Traxion fall detection smart watch/
 ├── WithDisplayDashboardFInal.ino     ESP32 firmware (Arduino sketch)
+├── secrets.example.h                 Credentials template (copy to secrets.h)
 ├── dashboard/
 │   ├── server.js                     Express + MQTT + SSE + email alert
 │   ├── package.json
@@ -84,12 +85,23 @@ via **Tools → Manage Libraries**:
 | `ArduinoJson` | Benoit Blanchon |
 | `PubSubClient` | Nick O'Leary |
 
-Select **ESP32 Dev Module**, then set your Wi-Fi credentials at the top of the sketch:
+Select **ESP32 Dev Module**, then create your credentials file (it is git-ignored):
+
+```powershell
+Copy-Item secrets.example.h secrets.h
+```
+
+Edit `secrets.h` and fill in your Wi-Fi name/password and ThingsBoard token:
 
 ```cpp
-const char* ssid = "your-wifi";
-const char* password = "your-password";
+#define WIFI_SSID "your-wifi-name"
+#define WIFI_PASSWORD "your-wifi-password"
+#define TB_TOKEN "your-thingsboard-access-token"
+#define TB_DEVICE_ID "your-thingsboard-device-id"
 ```
+
+The sketch reads them with `#include "secrets.h"`, so no credentials are stored in
+the code itself. `secrets.h` must sit next to `WithDisplayDashboardFInal.ino`.
 
 > ⚠️ **Important:** the firmware publishes to **ThingsBoard Cloud**
 > (`v1/devices/me/telemetry`), while the dashboard subscribes to a **local** broker
@@ -119,9 +131,9 @@ as environment variables. `.env` is git-ignored.
 | `MQTT_BROKER_URL` | `mqtt://192.168.1.3` | Broker the dashboard subscribes to |
 | `MQTT_TOPIC` | `patient/data` | Telemetry topic |
 | `PORT` | `3000` | HTTP port |
-| `EMAIL_USER` | (see `.env.example`) | Gmail account used to send alerts |
-| `EMAIL_PASS` | (see `.env.example`) | Gmail **App Password** |
-| `ALERT_TO` | (see `.env.example`) | Caretaker email address |
+| `EMAIL_USER` | *(not set)* | Gmail account used to send alerts — alerts stay disabled until all three email values are set |
+| `EMAIL_PASS` | *(not set)* | Gmail **App Password** |
+| `ALERT_TO` | *(not set)* | Caretaker email address |
 
 ### npm scripts
 
@@ -231,25 +243,39 @@ publish straight to the real broker.
 | Page loads but icons are missing | The Font Awesome stylesheet is blocked — the `integrity` hash in `public/index.html` must match the CDN file. |
 | Charts stay empty but cards update | Chart.js failed to load from the CDN; check the browser console / internet access. |
 | `Email error: Invalid login` | Gmail rejected the password. Use a 16-character **App Password** (Google Account → Security → 2-Step Verification → App passwords). |
+| `Email alerts are disabled` in the console | `EMAIL_USER`, `EMAIL_PASS` and `ALERT_TO` are not all set. Add them to `dashboard/.env`. |
 | `SSD1306 allocation failed` on the watch | OLED not found at `0x3C`. Check wiring and that the display runs on `Wire1` (`SDA 22`, `SCL 23`). |
 | `Failed to find MPU6050 chip` | Check `SDA 18` / `SCL 19`, power, and pull-ups. |
 
 ## Security notes
 
-This is a prototype, and the repository contains credentials that were used during
-development:
+Credentials are **not** stored in the code anymore:
 
-- The Wi-Fi SSID/password in the `.ino` file.
-- A Gmail address and password in `server.js` / `.env.example`.
+- The firmware reads Wi-Fi and ThingsBoard values from `secrets.h` (git-ignored).
+- The dashboard reads email settings from `dashboard/.env` (git-ignored).
 
-Before sharing or deploying this project:
+```powershell
+Copy-Item secrets.example.h secrets.h
+Copy-Item dashboard/.env.example dashboard/.env
+```
 
-1. **Rotate the Gmail password** (and the ThingsBoard device token) — they are in
-   the git history.
-2. Move secrets into `dashboard/.env` (git-ignored) and put the Wi-Fi credentials in
-   a separate `secrets.h` that is not committed.
-3. Do not expose the dashboard or the broker to the public internet without
-   authentication.
+### Rotate the old credentials
+
+Earlier commits still contain the development Wi-Fi password, Gmail password and
+ThingsBoard token. If the repository is public, treat those values as leaked and
+rotate them:
+
+1. **Gmail** — Google Account → Security → 2-Step Verification → App passwords →
+   delete the old app password → create a new one → put it in `dashboard/.env`.
+2. **Wi-Fi** — change the router password, then update `secrets.h`.
+3. **ThingsBoard** — open the device → *Manage credentials* → regenerate the access
+   token → update `secrets.h`.
+
+Rewriting the git history with `git filter-repo` is optional; rotating the values is
+what actually makes the leaked ones useless.
+
+Finally, do not expose the dashboard or the broker to the public internet without
+authentication.
 
 ## Screenshots
 

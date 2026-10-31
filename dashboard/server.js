@@ -18,18 +18,23 @@ const MQTT_BROKER_URL = process.env.MQTT_BROKER_URL || 'mqtt://192.168.1.3';
 const MQTT_TOPIC = process.env.MQTT_TOPIC || 'patient/data';
 const PORT = process.env.PORT || 3000;
 
-// Email configuration
-const EMAIL_USER = process.env.EMAIL_USER || 'Jerryriggg123@gmail.com';
-const EMAIL_PASS = process.env.EMAIL_PASS || '123#itpm456'; // Replace with an app password
-const ALERT_TO = process.env.ALERT_TO || 'samiru.gamage@gmail.com';
+// Email configuration (optional).
+// Set EMAIL_USER / EMAIL_PASS / ALERT_TO in dashboard/.env to enable alerts.
+// Never commit real credentials - .env is git-ignored.
+const EMAIL_USER = process.env.EMAIL_USER;
+const EMAIL_PASS = process.env.EMAIL_PASS;
+const ALERT_TO = process.env.ALERT_TO;
+const EMAIL_ENABLED = Boolean(EMAIL_USER && EMAIL_PASS && ALERT_TO);
 
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: EMAIL_USER,
-    pass: EMAIL_PASS,
-  },
-});
+const transporter = EMAIL_ENABLED
+  ? nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: EMAIL_USER,
+        pass: EMAIL_PASS,
+      },
+    })
+  : null;
 
 // MQTT client setup
 const mqttClient = mqtt.connect(MQTT_BROKER_URL, {
@@ -72,6 +77,13 @@ mqttClient.on('message', (topic, message) => {
 
   // Send email if fallDetected is true
   if (data.fallDetected) {
+    if (!EMAIL_ENABLED) {
+      console.log(
+        'Fall detected, but email alerts are disabled. Set EMAIL_USER, EMAIL_PASS and ALERT_TO in dashboard/.env'
+      );
+      return;
+    }
+
     const mailOptions = {
       from: EMAIL_USER,
       to: ALERT_TO,
@@ -112,4 +124,7 @@ app.get('/events', (req, res) => {
 // Start the server
 app.listen(PORT, () => {
   console.log(`Server is listening on http://localhost:${PORT}`);
+  if (!EMAIL_ENABLED) {
+    console.log('Email alerts are disabled (no EMAIL_USER / EMAIL_PASS / ALERT_TO configured).');
+  }
 });
